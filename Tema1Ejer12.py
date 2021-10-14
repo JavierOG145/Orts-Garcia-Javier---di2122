@@ -1,11 +1,15 @@
 import os
 import sys
 
+directory_carpeta = os.path.dirname(__file__)
+ruta_test = os.path.join(directory_carpeta,"test.txt")
+ruta_result = os.path.join(directory_carpeta,"result.txt")
+
 
 def write():
     try:
-        with open(os.path.join("test.txt"), "r+") as f,  \
-            open(os.path.join("result.txt"),"a") as r:
+        with open(ruta_test, "r+") as f,  \
+            open(ruta_result,"a") as r:
         
             for linea in f:
                 numero = linea.split(" ")
@@ -47,8 +51,10 @@ def write():
                         int(numero1), int(numero2)))+"\n")
 
     except ValueError:
-            print("Valor no correcto")
+        print("Valor no correcto")
     except IndexError:
-            print("Hay un espacio")
+        print("Hay un espacio")
+    except FileNotFoundError:
+        print("No exite el archivo")
     
 write()
