@@ -4,7 +4,9 @@ import sys
 
 def write():
     try:
-        with open(os.path.join("test.txt"), "r+") as f:
+        with open(os.path.join("test.txt"), "r+") as f,  \
+            open(os.path.join("result.txt"),"a") as r:
+        
             for linea in f:
                 numero = linea.split(" ")
                 numero1 = numero[0]
@@ -20,21 +22,29 @@ def write():
                 num2 = temp[0]
 
                 if signo == "+":
-                    resultado = lambda x, x2: x+x2
+                    def resultado(x, x2): return x+x2
                     print(num, sig, num2, "=", resultado(
-                    int(numero1), int(numero2)))
+                        int(numero1), int(numero2)))
+                    r.write(num + sig + num2 + "=" + str(resultado(
+                        int(numero1), int(numero2)))+"\n")
                 if signo == "-":
-                    resultado = lambda x, x2: x-x2
+                    def resultado(x, x2): return x-x2
                     print(num, sig, num2, "=", resultado(
-                    int(numero1), int(numero2)))
+                        int(numero1), int(numero2)))
+                    r.write(num + sig + num2 + "=" + str(resultado(
+                        int(numero1), int(numero2)))+"\n")
                 if signo == "*":
-                    resultado = lambda x, x2: x*x2
+                    def resultado(x, x2): return x*x2
                     print(num, sig, num2, "=", resultado(
-                    int(numero1), int(numero2)))
+                        int(numero1), int(numero2)))
+                    r.write(num + sig + num2 + "=" + str(resultado(
+                        int(numero1), int(numero2)))+"\n")
                 if signo == "/":
-                    resultado = lambda x, x2: x/x2
+                    def resultado(x, x2): return x/x2
                     print(num, sig, num2, "=", resultado(
-                    int(numero1), int(numero2)))
+                        int(numero1), int(numero2)))
+                    r.write(num + sig + num2 + "=" + str(resultado(
+                        int(numero1), int(numero2)))+"\n")
 
     except ValueError:
             print("Valor no correcto")
