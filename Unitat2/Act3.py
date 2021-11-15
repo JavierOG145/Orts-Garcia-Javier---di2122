@@ -16,6 +16,7 @@ class MainWindow(QMainWindow):
     def __init__(self, title="Title", button_text="Text", fixed=False):
         super().__init__()
         self.setWindowTitle(title)
+        
 
         self.button = QPushButton(button_text)
 
