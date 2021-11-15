@@ -10,20 +10,23 @@ class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
 
-        self.setFixedSize(QSize(720, 500))
+        self.setFixedSize(QSize(config.NORM_SCREEN_WIDTH, config.NORM_SCREEN_HEIGHT))
         self.setWindowTitle("Exemple signals-slots 1")
         
         
 
         self.MaxButton = QPushButton('Maximitza', self)
         self.MaxButton.setFixedSize(config.BUTTON_WIDTH, config.BUTTON_HEIGHT)
-        self.MaxButton.move(0,0)
+        
         self.NorButton = QPushButton('Normalitza',self)
         self.NorButton.setFixedSize(config.BUTTON_WIDTH, config.BUTTON_HEIGHT)
-        self.NorButton.move(120, 0)
+        
         self.MinButton = QPushButton('Minimitza',self)
         self.MinButton.setFixedSize(config.BUTTON_WIDTH, config.BUTTON_HEIGHT)   
-        self.MinButton.move(240,0)
+        
+        self.MaxButton.move((config.NORM_SCREEN_WIDTH/2)-(config.BUTTON_WIDTH*1.5),(config.NORM_SCREEN_HEIGHT/2)-(config.BUTTON_HEIGHT/2))
+        self.NorButton.move((config.NORM_SCREEN_WIDTH/2)-(config.BUTTON_WIDTH/2),(config.NORM_SCREEN_HEIGHT/2)-(config.BUTTON_HEIGHT/2))
+        self.MinButton.move((config.NORM_SCREEN_WIDTH/2)+(config.BUTTON_WIDTH/2),((config.NORM_SCREEN_HEIGHT/2)-(config.BUTTON_HEIGHT/2)))
         
         #Connectem la senyal clicked a la ranura button_pressed
         self.MaxButton.clicked.connect(self.Maxbutton_pressed) 
@@ -64,9 +67,9 @@ class MainWindow(QMainWindow):
         self.NorButton.setEnabled(True)
         self.MinButton.setEnabled(False)
                     
-        self.MaxButton.move(0,20)
-        self.NorButton.move(120, 20)
-        self.MinButton.move(240,20)
+        self.MaxButton.move(0, 0)
+        self.NorButton.move(120, 0)
+        self.MinButton.move(240,0)
             
         #self.MaxButton.move((config.MIN_SCREEN_WIDTH/2)-180,(config.MIN_SCREEN_WIDTH/2)-50)
         #self.NorButton.move((config.MIN_SCREEN_WIDTH/2)-60,(config.MIN_SCREEN_WIDTH/2)-50)

@@ -5,10 +5,11 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton
 from PySide6.QtCore import QSize
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-t TITLE","--title TITLE", help="Title of application")
-parser.add_argument("-b BUTTON_TEXT", "--button-text BUTTON_TEXT",help="Button text")
-parser.add_argument("-f","--fixed-size", help="Title of application")
-parser.add_argument("-s SIZE SIZE","--size SIZE SIZE", help="Size of windows")
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-t","--title", help="Title of application")
+group.add_argument("-b", "--button-text",help="Button text")
+group.add_argument("-f","--fixed-size", action="store_true",help="Window fixed size")
+group.add_argument("-s","--size", nargs=2, metavar=("SIZE_X", "SIZE_Y"), type=int, help="Window's size")
 args = parser.parse_args()
 
 class MainWindow(QMainWindow):
