@@ -12,11 +12,9 @@ class Calculadora(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.parentesis = False
-        
         self.setWindowTitle("Calculadora")
         self.setFixedSize(300, 400)
-        
+        self.setStyleSheet("background-color: #6e7d8a;")
         self.generalLayout = QVBoxLayout()
         self._centralWidget = QWidget(self)
         self.setCentralWidget(self._centralWidget)
@@ -24,11 +22,12 @@ class Calculadora(QMainWindow):
         
         self._createDisplay()
         self._createButtons()
+        self.parentesis = False
 
     def _createDisplay(self):
 
         self.display = QLineEdit()
-        
+        self.display.setStyleSheet("font: 30px; background-color: #192733; color: white")
         self.display.setFixedHeight(100)
         self.display.setAlignment(Qt.AlignRight)
         self.display.setReadOnly(True)
@@ -39,14 +38,14 @@ class Calculadora(QMainWindow):
         
         self.buttons = {}
         buttonsLayout = QGridLayout()
-        
+                
         buttons = {
             '√': (0, 0),
             'π': (0, 1),
             '^': (0, 2),
-            '!': (0, 3),
-            'C': (1, 0),
-            '()': (1, 1),
+            '<-': (0, 3),
+            '(': (1, 0),
+            ')': (1, 1),
             '%': (1, 2),
             '/': (1, 3),
             '7': (2, 0),
@@ -63,13 +62,15 @@ class Calculadora(QMainWindow):
             '-': (4, 3),
             '0': (5, 0),
             '.': (5, 1),
-            '<-': (5, 2),
+            'C': (5, 2),
             '=': (5, 3),
         }
         
         for btnText, pos in buttons.items():
             self.buttons[btnText] = QPushButton(btnText)
-            self.buttons[btnText].setFixedSize(50, 50)
+            self.buttons[btnText].setFixedSize(65, 46)
+            self.buttons[btnText].setStyleSheet("background-color: #192733; color: white")
+            
             buttonsLayout.addWidget(self.buttons[btnText], pos[0], pos[1])
         
         self.generalLayout.addLayout(buttonsLayout)
@@ -88,7 +89,8 @@ class Calculadora(QMainWindow):
         line = self.display.text()     
         self.setDisplayText(line[:-1])
     
-    def parentesi(self):
+    #No esta conectado, por si el usuario quiere hacer parentesis dentro de otro
+    def  parenthesis(self):
         line = self.display.text()
         if self.parentesis == False:
             self.setDisplayText(line+"(")
@@ -135,14 +137,14 @@ class PyCalcCtrl:
     def _connectSignals(self):
         """Connect signals and slots."""
         for btnText, btn in self._view.buttons.items():
-            if btnText not in {"=", "C","<-","()"}:
+            if btnText not in {"=", "C","<-"}:
                 btn.clicked.connect(partial(self._buildExpression, btnText))
 
         self._view.buttons["="].clicked.connect(self._calculateResult)
         self._view.display.returnPressed.connect(self._calculateResult)
         self._view.buttons["C"].clicked.connect(self._view.clearDisplay)
         self._view.buttons["<-"].clicked.connect(self._view.deleteOneChar)
-        self._view.buttons["()"].clicked.connect(self._view.parentesi)
+        #self._view.buttons["()"].clicked.connect(self._view.parenthesis)
 
 
 # Client code
