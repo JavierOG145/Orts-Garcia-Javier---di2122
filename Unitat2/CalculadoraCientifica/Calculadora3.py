@@ -1,356 +1,255 @@
 import sys
 import os
+from exitDialog import exitDialog
+import fileDialog
 
 from functools import partial
-from PySide6.QtGui import QAction, QIcon
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtWidgets import QCheckBox, QMainWindow, QApplication, QGridLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QToolBar
+from PySide6.QtGui import QAction
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QMainWindow, QApplication, QGridLayout,
+                               QLineEdit,QPushButton, QVBoxLayout, QWidget,
+                               QStackedLayout, QStatusBar, QLabel )
 
 
 ERROR_MSG = "ERROR"
-
-
-'''
-Shortcuts:
-
-Ctrl+ñ = Quit
-Ctrl+p = Change
-
-'''
 
 directory_carpeta = os.path.dirname(__file__)
 ruta_save = os.path.join(directory_carpeta,"operaciones.txt")
 
 class Calculadora(QMainWindow):
-    def __init__(self, window2=None):
+    def __init__(self):
         super().__init__()
         
         self.setWindowTitle("Calculadora Normal")
         self.setFixedSize(300, 400)
         self.setStyleSheet("background-color: #6e7d8a;")
         
-        #Layout General
-        self.generalLayout = QVBoxLayout()
         
-        self._window2 = window2
-    
-        self._centralWidget = QWidget(self)
-        self.setCentralWidget(self._centralWidget)
-        self._centralWidget.setLayout(self.generalLayout)
+        self.widget = QWidget()
+        self.setCentralWidget(self.widget)
+
+
+        # Modo Normal
+        self.Norm = QWidget()
+        self.layout_estandar = QVBoxLayout(self.Norm)
+        self.Norm.setLayout(self.layout_estandar)
+
+        # Modo Cientifica
+        self.Cient = QWidget()
+        self.layout_cientifica = QVBoxLayout(self.Cient)
+        self.Cient.setLayout(self.layout_cientifica)
+
+        # StackedLayout para añadir ambos modos
+        self.stackedLayout = QStackedLayout(self.widget)
+        self.stackedLayout.addWidget(self.Norm)
+        self.stackedLayout.addWidget(self.Cient)
+
+        #QAction para cambiar a Normal
+        button_norm = QAction("&Normal", self)
+        button_norm.setShortcut('Ctrl+n')
+        button_norm.setStatusTip("Boton Normal")
+        button_norm.triggered.connect(self.mode_norm)
         
-        #Toolbar para añadir el checkbox
-        toolbar = QToolBar("Toolbar")
-        toolbar.setIconSize(QSize(16, 16))
-        toolbar.setToolButtonStyle(Qt.ToolButtonFollowStyle)
-        self.addToolBar(toolbar)
+        #QAction para cambiar a Cientifica
+        button_cient = QAction("&Cientifica", self)
+        button_cient.setShortcut('Ctrl+c')
+        button_cient.setStatusTip("Boton Cientifica")
+        button_cient.triggered.connect(self.mode_cient)
         
-        #Alterna entre "Change_Cient" y "Change_Norm" para cambiar entre las dos calculadoras
-        button_action = QAction("&Change_Cient", self)
-        button_action.setShortcut('Ctrl+p')
-        button_action.setStatusTip("This is your button")
-        button_action.triggered.connect(self.changeWindow)
+        #QAction checkable para alternar entre modo guardado o no
+        self.button_save = QAction("&Save", self)
+        self.button_save.setShortcut('Ctrl+s')
+        self.button_save.setStatusTip("Boton save")
+        self.button_save.setCheckable(True)
+        self.button_save.triggered.connect(self.buttonHistorial)
         
-        #Si se presiona, se sale
+        #QAction para cerrar aplicacion
         button_quit = QAction("Quit", self)
-        button_quit.setShortcut('Ctrl+s')
-        button_quit.setStatusTip("This is your button quit")
-        button_quit.triggered.connect(self.quitApp)  
+        button_quit.setShortcut('Ctrl+q')
+        button_quit.setStatusTip("Boton quit")
+        button_quit.triggered.connect(self.quitApp)
+        
+        #QAction para navegar por los archivos
+        '''
+        self.button_archivos = QAction("Files", self)
+        self.button_archivos.setShortcut('Ctrl+h')
+        self.button_archivos.setCheckable(True)
+        self.button_archivos.triggered.connect(self.buttonHistorial)
+        '''
+
+        
         #Menu
         self.menu = self.menuBar()
-        file_menu = self.menu.addMenu("&Calculadora")
+        file_menu = self.menu.addMenu("&Menu")
         
-        #SubMenu donde se añadira el QAction para cambiar entre calculadoras
-        file_submenu = file_menu.addMenu("&Submenu")
-        file_submenu.addAction(button_action)
-        #Añadir el QAction Quit
+        #SubMenu donde se añadiran los QActions modo Normal y Cientifica
+        file_submenu = file_menu.addMenu("&Tipos")
+        file_submenu.addAction(button_norm)
+        file_submenu.addAction(button_cient)
+        
+        #Añadir el QAction Quit y Save al menu
+        file_menu.addAction(self.button_save)
         file_menu.addAction(button_quit)
+        #file_menu.addAction(self.button_archivos)
         
-        #CheckBox, si esta True entonces al presionar "=" guardara la operacion en un .txt
-        self.save_check = QCheckBox("Checkbox")
-        self.save_check.setStatusTip("Checkbox")
-        toolbar.addWidget(self.save_check)
-        #QLineEdit
-        self.display = QLineEdit()
-        self.display.setAlignment(Qt.AlignRight)
-        self.display.setFixedHeight(100)
-        self.display.setStyleSheet("font: 30px; background-color: #192733; color: white")
-        self.display.setReadOnly(True)
-        self.generalLayout.addWidget(self.display)
+        # Status Bar        
+        self.setStatusBar(QStatusBar(self))
+        # Status Bar Widget para guardar el estado de la calculadora
+        self.calc_mode = QLabel("Calc. Normal")
+        self.calc_mode.setScaledContents(True)
+        self.statusBar().addPermanentWidget(self.calc_mode)
+        self.statusBar().addPermanentWidget(QLabel("|"))
         
-        self.createButtons()
-        self.connectButtons()
+        # Status Bar Widget para saber el estado del save
+        self.files = QLabel("OFF")
+        self.files.setScaledContents(True)
+        self.statusBar().addPermanentWidget(self.files)
 
-    def createButtons(self):
-        self.buttons = {}
-        layout_buttons = QGridLayout()
-        # Creamos un diccionario con el texto y las coordenadas del Layout
-        buttons_temp = {
-            '√': (0, 0),
-            'π': (0, 1),
-            '**': (0, 2),
-            'DELETE': (0, 3),
-            '(': (1, 0),
-            ')': (1, 1),
-            '%': (1, 2),
-            '/': (1, 3),
-            '7': (2, 0),
-            '8': (2, 1),
-            '9': (2, 2),
-            '*': (2, 3),
-            '4': (3, 0),
-            '5': (3, 1),
-            '6': (3, 2),
-            '+': (3, 3),
-            '1': (4, 0),
-            '2': (4, 1),
-            '3': (4, 2),
-            '-': (4, 3),
-            '0': (5, 0),
-            '.': (5, 1),
-            'C': (5, 2),
-            '=': (5, 3),
+        # Variables
+        self.guardados = ""
+        self.result = ""
+        self.total = ""
+
+        # NORMAL --------------
+        self.display_norm = QLineEdit()
+        self.display_norm.setAlignment(Qt.AlignRight)
+        self.display_norm.setFixedHeight(100)
+        self.display_norm.setStyleSheet("font: 30px; background-color: #192733; color: white")
+        self.display_norm.setReadOnly(True)
+        self.layout_estandar.addWidget(self.display_norm)
+        
+        self.keyboards_norm= {}
+
+        teclas_layout_norm = QGridLayout()
+        
+        keyboards_norm = {
+            '√': (0, 0),'π': (0, 1),'**': (0, 2),'<-': (0, 3),
+            '(': (1, 0),')': (1, 1),'%': (1, 2),'/': (1, 3),
+            '7': (2, 0),'8': (2, 1),'9': (2, 2),'x': (2, 3),
+            '4': (3, 0),'5': (3, 1),'6': (3, 2),'+': (3, 3),
+            '1': (4, 0),'2': (4, 1),'3': (4, 2),'-': (4, 3),
+            '0': (5, 0),'.': (5, 1),'C': (5, 2),'=': (5, 3),
+        }
+        
+        for boton, posicion in keyboards_norm.items():
+            self.keyboards_norm[boton] = QPushButton(boton)
+            self.keyboards_norm[boton].setStyleSheet("background-color: #192733; color: white")
+            self.keyboards_norm[boton].setFixedSize(60, 38)
+            self.keyboards_norm[boton].setShortcut(boton)
+            self.keyboards_norm[boton].setStatusTip(boton)
+
+            teclas_layout_norm.addWidget(self.keyboards_norm[boton],posicion[0], posicion[1])
+            self.keyboards_norm[boton].clicked.connect(self.operacion)
+            
+        self.layout_estandar.addLayout(teclas_layout_norm)
+        self.keyboards_norm['='].clicked.connect(self.calculateResult)
+        
+        # CIENTIFICA -------------
+        
+        self.display_cient = QLineEdit()
+        self.display_cient.setAlignment(Qt.AlignRight)
+        self.display_cient.setFixedHeight(100)
+        self.display_cient.setStyleSheet("font: 30px; background-color: #192733; color: white")
+        self.display_cient.setReadOnly(True)
+        self.layout_cientifica.addWidget(self.display_cient)
+
+        self.keyboards_cient = {}
+        
+        teclas_layout_cient = QGridLayout()
+
+        keyboards_cient = {
+            '√': (0, 0),'π': (0, 1),'**': (0, 2),'<-': (0, 3), 'log': (0, 4),
+            '(': (1, 0),')': (1, 1),'%': (1, 2),'/': (1, 3), 'ln': (1, 4),
+            '7': (2, 0),'8': (2, 1),'9': (2, 2),'x': (2, 3), 'n!': (2, 4),
+            '4': (3, 0),'5': (3, 1),'6': (3, 2),'+': (3, 3), 'e': (3, 4),
+            '1': (4, 0),'2': (4, 1),'3': (4, 2),'-': (4, 3), 'x/y': (4, 4),
+            '0': (5, 0),'.': (5, 1),'C': (5, 2),'=': (5, 3), '|x|': (5, 4),
         }
 
-        # Recorrer el diccionario de botones
-        # Creando un boton en cada posición asignada
-        for btn, pos in buttons_temp.items():
-            self.buttons[btn] = QPushButton(btn)
-            self.buttons[btn].setFixedSize(60, 38)
-            self.buttons[btn].setStyleSheet("background-color: #192733; color: white")
-            self.buttons[btn].setShortcut(btn)
-            layout_buttons.addWidget(self.buttons[btn], pos[0], pos[1])  # Añadimos el boton con su posición
+        for boton_c, posicion_c in keyboards_cient.items():
+            self.keyboards_cient[boton_c] = QPushButton(boton_c)
+            self.keyboards_cient[boton_c].setFixedSize(55, 35)
+            self.keyboards_cient[boton_c].setStyleSheet("background-color: #192733; color: white")
+            self.keyboards_cient[boton_c].setShortcut(boton_c)
+            self.keyboards_cient[boton_c].setStatusTip(boton_c)
+            teclas_layout_cient.addWidget(self.keyboards_cient[boton_c],posicion_c[0], posicion_c[1])
+            self.keyboards_cient[boton_c].clicked.connect(self.operacion)
+            
+        self.layout_cientifica.addLayout(teclas_layout_cient)
+        self.keyboards_cient['='].clicked.connect(self.calculateResult)
 
-        # Añadimos el layout de botones al layout principal
-        self.generalLayout.addLayout(layout_buttons)
-        
-    def connectButtons(self):
-        # Recorre dict y utiliza la señal connect
-        for text, boto in self.buttons.items():
-            if text not in {"=", "C", "DELETE"}:
-                boto.clicked.connect(partial(self.evaluateExpression, text))
-        # Excepciones
-        self.buttons["="].clicked.connect(self.calculateResult)
-        self.display.returnPressed.connect(self.calculateResult)
-        self.buttons["C"].clicked.connect(self.clearDisplay)
-        self.buttons["DELETE"].clicked.connect(self.deleteOneChar)
+    # Cambia a modo normal
+    def mode_norm(self):
+        self.stackedLayout.setCurrentWidget(self.Norm)
+        self.calc_mode.setText("Calculadora Normal")
+
+    # Cambia a modo cientifica
+    def mode_cient(self):
+        self.stackedLayout.setCurrentWidget(self.Cient)
+        self.calc_mode.setText("Calculadora Cientifica")
     
-    # Deja pantalla en blanco
-    def clearDisplay(self):
-        self.display.setText("")
-
-    # Elimina carácter
-    def deleteOneChar(self):
-        self.display.setText(self.display.text()[:-1])
-
-    # El boton que pulsemos se añade a la linea con el anterior
-    def evaluateExpression(self, prev):
-        if self.display.text() == "ERROR":
+    def operacion(self):
+        if (self.sender().text() == "="):
+            pass
+        elif (self.sender().text() == "<-"):
+            self.refresh_display(self.guardados[:-1])
+            self.guardados = self.guardados[:-1]
+        elif (self.sender().text() == "C"):
             self.clearDisplay()
-        exp = self.display.text() + prev
-        self.display.setText(exp)
-        
-    #Devuelve el estado del checkbox
-    def saveStatus(self):
-        return self.save_check.isChecked()
-    
-    # Envía el texto a la funcion evaluate y el resultado se muestra por pantalla
-    def calculateResult(self):
-        result = self.evaluate(self.display.text())
-        total = self.display.text()+"="+result
-        self.display.setText(total)
-        with open (ruta_save, "a") as f:
-            if self.saveStatus():  
-                f.write(total)
-                f.write("\n")
-    # Pasado el parámetro hace un eval de este
-    def evaluate(self, expression):
-        try:
-            res = str(eval(expression))
-        except Exception:
-            res = "ERROR"
-        return res
-    
-    def quitApp(self):
-        self.close()
+        elif (self.sender().text() == "x"):
+            self.guardados += "*"
+            self.refresh_display(self.guardados)
+        else:
+            self.guardados += self.sender().text()
+            self.refresh_display(self.guardados)
 
-    def changeWindow(self):
-        self.hide()
-        if self._window2 is None:
-            self._window2 = CalculadoraCient(self)
-        self._window2.show()
-                 
-    
-def evaluateExpression(expression):
-    """Evaluate an expression."""
-    try:
-        result = str(eval(expression, {}, {}))
-    except Exception:
-        result = ERROR_MSG
-    return result
-
-class CalculadoraCient(QMainWindow):
-    def __init__(self, window1=None):
-        super().__init__()
-        
-        self.setWindowTitle("Calculadora Normal")
-        self.setFixedSize(300, 400)
-        self.setStyleSheet("background-color: #6e7d8a;")
-        
-        #Layout General
-        self.generalLayout = QVBoxLayout()
-        
-        self._window1 = window1
-    
-        self._centralWidget = QWidget(self)
-        self.setCentralWidget(self._centralWidget)
-        self._centralWidget.setLayout(self.generalLayout)
-        
-        #Toolbar para añadir el checkbox
-        toolbar = QToolBar("Toolbar")
-        toolbar.setIconSize(QSize(16, 16))
-        toolbar.setToolButtonStyle(Qt.ToolButtonFollowStyle)
-        self.addToolBar(toolbar)
-        
-        #Alterna entre "Change_Cient" y "Change_Norm" para cambiar entre las dos calculadoras
-        button_action = QAction("&Change_Cient", self)
-        button_action.setShortcut('Ctrl+p')
-        button_action.setStatusTip("This is your button")
-        button_action.triggered.connect(self.changeWindow)
-        #Si se presiona, se sale
-        button_quit = QAction("Quit", self)
-        button_quit.setShortcut('Ctrl+s')
-        button_quit.setStatusTip("This is your button quit")
-        button_quit.triggered.connect(self.quitApp)  
-        #Menu
-        self.menu = self.menuBar()
-        file_menu = self.menu.addMenu("&Calculadora")
-        
-        #SubMenu donde se añadira el QAction para cambiar entre calculadoras
-        file_submenu = file_menu.addMenu("Submenu")
-        file_submenu.addAction(button_action)
-        #Añadir el QAction Quit
-        file_menu.addAction(button_quit)
-        
-        #CheckBox, si esta True entonces al presionar "=" guardara la operacion en un .txt
-        self.save_check = QCheckBox("Checkbox")
-        self.save_check.setStatusTip("Checkbox")
-        toolbar.addWidget(self.save_check)
-        #QLineEdit
-        self.display = QLineEdit()
-        self.display.setAlignment(Qt.AlignRight)
-        self.display.setFixedHeight(100)
-        self.display.setStyleSheet("font: 30px; background-color: #192733; color: white")
-        self.display.setReadOnly(True)
-        self.generalLayout.addWidget(self.display)
-        
-        self.createButtons()
-        self.connectButtons()
-
-    def createButtons(self):
-        self.buttons = {}
-        layout_buttons = QGridLayout()
-        # Creamos un diccionario con el texto y las coordenadas del Layout
-        buttons_temp = {
-            '√': (0, 0),
-            'π': (0, 1),
-            '**': (0, 2),
-            'DELETE': (0, 3),
-            'log': (0, 4),
-            '(': (1, 0),
-            ')': (1, 1),
-            '%': (1, 2),
-            '/': (1, 3),
-            'ln': (1, 4),
-            '7': (2, 0),
-            '8': (2, 1),
-            '9': (2, 2),
-            '*': (2, 3),
-            'n!': (2, 4),
-            '4': (3, 0),
-            '5': (3, 1),
-            '6': (3, 2),
-            '+': (3, 3),
-            'e': (3, 4),
-            '1': (4, 0),
-            '2': (4, 1),
-            '3': (4, 2),
-            '-': (4, 3),
-            'x/y': (4, 4),
-            '0': (5, 0),
-            '.': (5, 1),
-            'C': (5, 2),
-            '=': (5, 3),
-            '|x|': (5, 4),
-        }
-
-        # Recorrer el diccionario de botones
-        # Creando un boton en cada posición asignada
-        for btn, pos in buttons_temp.items():
-            self.buttons[btn] = QPushButton(btn)
-            self.buttons[btn].setFixedSize(55, 35)
-            self.buttons[btn].setStyleSheet("background-color: #192733; color: white")
-            self.buttons[btn].setShortcut(btn)
-            layout_buttons.addWidget(self.buttons[btn], pos[0], pos[1])  # Añadimos el boton con su posición
-
-        # Añadimos el layout de botones al layout principal
-        self.generalLayout.addLayout(layout_buttons)
-        
-    def connectButtons(self):
-        # Recorre dict y utiliza la señal connect
-        for text, boto in self.buttons.items():
-            if text not in {"=", "C", "DELETE"}:
-                boto.clicked.connect(partial(self.evaluateExpression, text))
-        # Excepciones
-        self.buttons["="].clicked.connect(self.calculateResult)
-        self.display.returnPressed.connect(self.calculateResult)
-        self.buttons["C"].clicked.connect(self.clearDisplay)
-        self.buttons["DELETE"].clicked.connect(self.deleteOneChar)
-    
-    # Deja pantalla en blanco
+    # Borra el String/Texto que se muestra en la ventana
     def clearDisplay(self):
-        self.display.setText("")
+        self.refresh_display("")
+        self.guardados = ""
 
-    # Elimina carácter
-    def deleteOneChar(self):
-        self.display.setText(self.display.text()[:-1])
-
-    # El boton que pulsemos se añade a la linea con el anterior
-    def evaluateExpression(self, prev):
-        if self.display.text() == "ERROR":
-            self.clearDisplay()
-        exp = self.display.text() + prev
-        self.display.setText(exp)
-
-    def saveStatus(self):
-        return self.save_check.isChecked()
-    # Envía el texto a la funcion evaluate y el resultado se muestra por pantalla
+    # Calcula la operacion, si el QAction save esta True guardara la operacion en un .txt
     def calculateResult(self):
-        result = self.evaluate(self.display.text())
-        total = self.display.text()+"="+result
-        self.display.setText(total)
-        with open (ruta_save, "a") as f:
-            if self.saveStatus():  
-                f.write(total)
-                f.write("\n")
-                
-
-    # Pasado el parámetro hace un eval de este
-    def evaluate(self, expression):
         try:
-            res = str(eval(expression))
-        except Exception:
-            res = "ERROR"
-        return res
+            self.result = str(eval(self.guardados))
+            total = self.guardados + "=" + self.result
+            self.refresh_display(total)
+            with open (ruta_save, "a") as f:
+                if self.status_save():  
+                    f.write(total)
+                    f.write("\n")
+        except:
+            self.refresh_display("ERROR")
+
+    # Actualiza el display
+    def refresh_display(self, text):
+        self.display_norm.setText(text)
+        self.display_cient.setText(text)
+
+    # Cierra la aplicacion
+    def quitApp(self,s):
+        
+        dlg = exitDialog()
+        if dlg.exec():
+            self.close()
+        else:
+            print("Cancelada la salida")
     
-    def quitApp(self):
-        self.close()
+    def buttonHistorial(self):
+        print("Historial")
+        if self.button_save.isChecked():
+            save_dlg = fileDialog.fileDialog(self)
+            if save_dlg.exec():
+                self.files.setText("ON")
+            else:
+                self.button_save.setChecked(False)
 
-    def changeWindow(self):
-        self.hide()
-        if self._window1 is None:
-            self._window1 = Calculadora(self)
-        self._window1.show()
+        else:
+            self.files.setText("OFF")
 
+    # Devuelve el estado del QAction save
+    def status_save(self):
+        return self.button_save.isChecked()
 
 app = QApplication(sys.argv)
 window = Calculadora()
