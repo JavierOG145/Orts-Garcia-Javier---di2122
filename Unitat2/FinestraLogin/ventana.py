@@ -13,14 +13,12 @@ from PySide6.QtWidgets import (
 )
 
 class AnotherWindow(QWidget):
-    """
-    Esta finestra és un QWidget, si no té parent,
-    es mostrarà com una finestra flotant.
-    """
+
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Login")
         layout = QVBoxLayout()
-
+        self.main = None
         self.user = QLineEdit("user")
         self.password = QLineEdit("password")
         self.aceptar_button = QPushButton("Aceptar")
@@ -44,39 +42,31 @@ class AnotherWindow(QWidget):
             account = self.user.text()
             password = self.password.text()
 
-            self.w = MainWindow1()
-            self.w2 = MainWindow2()
-
             if account=="user":
                 if password == "1234":
-                    if self.w.isVisible():
-                        self.w.hide()
-                    else:
-                        self.w.show()
-                        self.hide()
+                    self.main = MainWindow("user")
+                    self.main.show()
+                    self.close()
                 else:
                     self.error.setText("ERROR Contraseña")
                     
             elif account=="admin":
                 if password == "1234":
-                    if self.w2.isVisible():
-                        self.w2.hide()
-                    else:
-                        self.w2.show()
-                        self.hide()
+                    self.main = MainWindow("admin")
+                    self.main.show()
+                    self.close()
                 else:
                     self.error.setText("ERROR Contraseña")
             else:
                 self.error.setText("ERROR Usuario")
-
-
-class MainWindow1(QMainWindow):
-    def __init__(self):
+                
+class MainWindow(QMainWindow):
+    def __init__(self,user):
         super().__init__()
         
-        self.setWindowTitle("USER")
+        self.setWindowTitle("Logeado")
         layout = QVBoxLayout()
-        self.label = QLabel("WELCOME USER")
+        self.label = QLabel(f"Welcome {user}")
         
         layout.addWidget(self.label)
         
@@ -96,7 +86,7 @@ class MainWindow1(QMainWindow):
 
         self.setStatusBar(QStatusBar(self))
 
-        self.window_mode = QLabel("Mode: User")
+        self.window_mode = QLabel(f"Mode: {user}")
         self.window_mode.setScaledContents(True)
         self.statusBar().addPermanentWidget(self.window_mode)
 
@@ -108,68 +98,9 @@ class MainWindow1(QMainWindow):
         self.close()     
     def logout_action(self, checked):
         self.w = AnotherWindow()
+        self.w.show()
+        self.close()
 
-        if self.w.isVisible():
-            self.w.hide()
-
-        else:
-            self.hide()
-            self.w.show()
-    
-            
-class MainWindow2(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        
-        self.setWindowTitle("ADMIN")
-        layout = QVBoxLayout()
-        self.label = QLabel("WELCOME ADMIN")
-
-        layout.addWidget(self.label)
-        
-        self.menu = self.menuBar()
-        option_menu = self.menu.addMenu("&Menu")
-        
-        menu_button_logout = QAction("&Return", self)
-        menu_button_logout.setStatusTip("Return")
-        menu_button_logout.triggered.connect(self.logout_action)
-
-        menu_button_logout.setStatusTip("Boton Return")
-        menu_button_exit = QAction("&Exit", self)
-        menu_button_exit.setStatusTip("Exit")
-        menu_button_exit.triggered.connect(self.exit)
-
-        option_menu.addAction(menu_button_logout)
-        option_menu.addAction(menu_button_exit)
-
-
-        self.setStatusBar(QStatusBar(self))
-
-        self.window_mode = QLabel("mode: Admin")
-        self.window_mode.setScaledContents(True)
-        self.statusBar().addPermanentWidget(self.window_mode)
-
-
-        
-        widget = QWidget()
-        widget.setLayout(layout)
-        self.setCentralWidget(widget)
-
-    def exit(self,s):
-        self.close()     
-    def logout_action(self, checked):
-        self.w = AnotherWindow()
-
-        if self.w.isVisible():
-            self.w.hide()
-
-        else:
-            self.hide()
-            self.w.show()
-         
-
-    
-        
 app = QApplication(sys.argv)
 w = AnotherWindow()
 w.show()
