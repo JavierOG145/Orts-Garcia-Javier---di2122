@@ -1,0 +1,145 @@
+{
+  "name": "Comunidades Autonomas",
+  "comunidades": [
+    {
+      "name": "Espanya",
+      "infectados": 10809222,
+      "vacunados": 38779650,
+      "defunciones": 97998,
+      "hospitalizados": 9742
+    },
+    {
+      "name": "Andalucia",
+      "infectados": 1277556,
+      "vacunados": 7022050,
+      "defunciones": 12561,
+      "hospitalizados": 1081
+    },
+    {
+      "name": "Aragon",
+      "infectados": 381483,
+      "vacunados": 1089178,
+      "defunciones": 4741,
+      "hospitalizados": 382
+    },
+    {
+      "name": "Asturias",
+      "infectados": 183259,
+      "vacunados": 883303,
+      "defunciones": 2426,
+      "hospitalizados": 279
+    },
+    {
+      "name": "Canarias",
+      "infectados": 266095,
+      "vacunados": 1696242,
+      "defunciones": 1555,
+      "hospitalizados": 658
+    },
+    {
+      "name": "Cantabria",
+      "infectados": 119099,
+      "vacunados": 494028,
+      "defunciones": 739,
+      "hospitalizados": 111
+    },
+    {
+      "name": "Castilla La Mancha",
+      "infectados": 450647,
+      "vacunados": 1638322,
+      "defunciones": 7025,
+      "hospitalizados": 312
+    },
+    {
+      "name": "Castilla y Leon",
+      "infectados": 623973,
+      "vacunados": 2038807,
+      "defunciones": 8139,
+      "hospitalizados": 533
+    },
+    {
+      "name": "Catalunya",
+      "infectados": 2146089,
+      "vacunados": 6147876,
+      "defunciones": 17534,
+      "hospitalizados": 2360
+    },
+    {
+      "name": "Ceuta",
+      "infectados": 18221,
+      "vacunados": 64283,
+      "defunciones": 144,
+      "hospitalizados": 11
+    },
+    {
+      "name": "C. Valenciana",
+      "infectados": 1207293,
+      "vacunados": 4127063,
+      "defunciones": 8916,
+      "hospitalizados": 868
+    },
+    {
+      "name": "Extremadura",
+      "infectados": 221944,
+      "vacunados": 909516,
+      "defunciones": 2208,
+      "hospitalizados": 109
+    },
+    {
+      "name": "Galicia",
+      "infectados": 484714,
+      "vacunados": 2350800,
+      "defunciones": 3058,
+      "hospitalizados": 466
+    },
+    {
+      "name": "Islas Baleares",
+      "infectados": 241670,
+      "vacunados": 886174,
+      "defunciones": 1202,
+      "hospitalizados": 304
+    },
+    {
+      "name": "La Rioja",
+      "infectados": 85478,
+      "vacunados": 265404,
+      "defunciones": 905,
+      "hospitalizados": 32
+    },
+    {
+      "name": "Madrid",
+      "infectados": 1519726,
+      "vacunados": 5424381,
+      "defunciones": 17071,
+      "hospitalizados": 1423
+    },
+    {
+      "name": "Melilla",
+      "infectados": 19733,
+      "vacunados": 60281,
+      "defunciones": 147,
+      "hospitalizados": 18
+    },
+    {
+      "name": "Murcia",
+      "infectados": 347207,
+      "vacunados": 1215614,
+      "defunciones": 2129,
+      "hospitalizados": 292
+    },
+    {
+      "name": "Navarra",
+      "infectados": 215791,
+      "vacunados": 541348,
+      "defunciones": 1481,
+      "hospitalizados": 117
+    },
+    {
+      "name": "Pais Vasco",
+      "infectados": 629324,
+      "vacunados": 1849411,
+      "defunciones": 6017,
+      "hospitalizados": 386
+    }
+  ]
+}
